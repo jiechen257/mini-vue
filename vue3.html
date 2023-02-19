@@ -96,6 +96,9 @@
 
         const obj = reactive({ name: "jiechen", age: 18, info: { desc: "技术爱好者" } })
 
+        // 1. 先将fn存入effectStack中
+        // 2. 执行fn，触发proxy的get，然后进行track，在track的过程中将fn与key进行绑定
+        // 3. 绑定个过程是利用一个 key 对应的 depSet，里面存放对应的fn
         effect(() => {
             console.log('effect1', obj.name)
         })
