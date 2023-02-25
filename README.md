@@ -15,3 +15,8 @@ vue3利用一个新的api —— effect
 - 另一方面`Map`的查找和遍历性能也优于`WeakMap`
 
 deps是`Set`结构：一个Key可能被多个fn调用，而且fn不用重复添加，需要去重，所以需要使用Set数据结构
+
+## render函数
+通过一个使用原生的 render 函数来渲染一个全局的 `SearchBar` 组件
+- 组件的挂载与卸载
+- 全局组件应用单例模式
