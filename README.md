@@ -20,3 +20,13 @@ deps是`Set`结构：一个Key可能被多个fn调用，而且fn不用重复添�
 通过一个使用原生的 render 函数来渲染一个全局的 `SearchBar` 组件
 - 组件的挂载与卸载
 - 全局组件应用单例模式
+
+## diff
+### vue2 双端比较
+新列表和旧列表两个列表的头与尾互相对比，在对比的过程中指针会逐渐向内靠拢，直到某一个列表的节点全部遍历过，对比停止
+
+### vue3 最长递增子序列
+借鉴于 [inferno](infernojs/inferno: An extremely fast, React-like JavaScript library for building modern user interfaces)
+该算法其中有两个理念:
+1. 相同的前置与后置元素的预处理
+2. 最长递增子序列，此思想与React的diff类似又不尽相同
