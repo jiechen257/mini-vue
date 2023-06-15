@@ -12,6 +12,7 @@ class ReactiveEffect {
 
 const targetMap = new WeakMap();
 
+// 收集依赖
 export function track(target, key) {
 	// target -> key -> dep
 	let depsMap = targetMap.get(target);
@@ -26,6 +27,16 @@ export function track(target, key) {
 	}
 
 	dep.add(activeEffect);
+}
+
+// 触发依赖
+export function trigger(target, key) {
+	let depsMap = targetMap.get(target);
+	let dep = depsMap.get(key);
+
+	for (const effect of dep) {
+		effect.run();
+	}
 }
 
 let activeEffect;
