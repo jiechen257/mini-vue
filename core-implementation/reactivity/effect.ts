@@ -1,12 +1,14 @@
 class ReactiveEffect {
 	private _fn;
-	constructor(fn: any) {
+	constructor(fn: any, public scheduler?: any) {
 		this._fn = fn;
 	}
 
 	run() {
+		// 此处的 this，绑定添加创建 effect 时的上下文
+		// 当调用 fn 时，确保对应的上下文是对应的 this
 		activeEffect = this;
-		this._fn();
+		return this._fn();
 	}
 }
 
@@ -23,7 +25,7 @@ export function track(target, key) {
 	let dep = depsMap.get(key);
 	if (!dep) {
 		dep = new Set();
-    depsMap.set(key, dep);
+		depsMap.set(key, dep);
 	}
 
 	dep.add(activeEffect);
@@ -35,14 +37,20 @@ export function trigger(target, key) {
 	let dep = depsMap.get(key);
 
 	for (const effect of dep) {
-		effect.run();
+		if (effect.scheduler) {
+			effect.scheduler();
+		} else {
+			effect.run();
+		}
 	}
 }
 
 let activeEffect;
 
-export function effect(fn: any) {
+export function effect(fn: any, options: any = {}) {
 	// fn
-	const _effect = new ReactiveEffect(fn);
+	const _effect = new ReactiveEffect(fn, options.scheduler);
+
 	_effect.run();
+	return _effect.run.bind(_effect);
 }
