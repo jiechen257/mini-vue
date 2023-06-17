@@ -1,5 +1,10 @@
+import { extend } from "../shared";
+
 class ReactiveEffect {
 	private _fn;
+	deps = [];
+	active = true;
+	onStop?: () => void;
 	constructor(fn: any, public scheduler?: any) {
 		this._fn = fn;
 	}
@@ -10,6 +15,20 @@ class ReactiveEffect {
 		activeEffect = this;
 		return this._fn();
 	}
+
+	stop() {
+		if (this.active) {
+			if (this.onStop) {
+				this.onStop();
+			}
+			cleanEffect(this);
+			this.active = false;
+		}
+	}
+}
+
+function cleanEffect(effect: any) {
+	effect.deps.forEach((dep: any) => dep.delete(effect));
 }
 
 const targetMap = new WeakMap();
@@ -28,7 +47,11 @@ export function track(target, key) {
 		depsMap.set(key, dep);
 	}
 
-	dep.add(activeEffect);
+	// 收集 effect
+	if (activeEffect) {
+		dep.add(activeEffect);
+		activeEffect?.deps.push(dep);
+	}
 }
 
 // 触发依赖
@@ -45,12 +68,21 @@ export function trigger(target, key) {
 	}
 }
 
-let activeEffect;
+let activeEffect: any;
 
 export function effect(fn: any, options: any = {}) {
 	// fn
 	const _effect = new ReactiveEffect(fn, options.scheduler);
 
+	extend(_effect, options);
+
 	_effect.run();
-	return _effect.run.bind(_effect);
+	const runner: any = _effect.run.bind(_effect);
+	runner.effect = _effect;
+
+	return runner;
+}
+
+export function stop(runner: any) {
+	runner.effect.stop();
 }
