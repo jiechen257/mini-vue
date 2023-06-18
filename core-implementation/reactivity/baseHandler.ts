@@ -21,6 +21,7 @@ function createSetter(isReadonly = false): any {
 	return function set(target, key, value) {
 		if (isReadonly) {
 			console.warn(`Cannot set ${key} because it is readonly.`);
+			return true;
 		} else {
 			const res = Reflect.set(target, key, value);
 
