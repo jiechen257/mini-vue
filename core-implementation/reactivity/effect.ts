@@ -1,5 +1,7 @@
 import { extend } from "../shared";
 
+let activeEffect: any;
+let shouldTrack = false;
 class ReactiveEffect {
 	private _fn;
 	deps = [];
@@ -10,10 +12,19 @@ class ReactiveEffect {
 	}
 
 	run() {
+		if (!this.active) {
+			return this._fn();
+		}
+		shouldTrack = true;
 		// 此处的 this，绑定添加创建 effect 时的上下文
 		// 当调用 fn 时，确保对应的上下文是对应的 this
 		activeEffect = this;
-		return this._fn();
+
+		const result = this._fn();
+		// reset
+		shouldTrack = false;
+
+		return result;
 	}
 
 	stop() {
@@ -29,12 +40,15 @@ class ReactiveEffect {
 
 function cleanEffect(effect: any) {
 	effect.deps.forEach((dep: any) => dep.delete(effect));
+	effect.deps.length = 0;
 }
 
 const targetMap = new WeakMap();
 
 // 收集依赖
 export function track(target, key) {
+	if(!isTracking()) return;
+
 	// target -> key -> dep
 	let depsMap = targetMap.get(target);
 	if (!depsMap) {
@@ -48,10 +62,14 @@ export function track(target, key) {
 	}
 
 	// 收集 effect
-	if (activeEffect) {
-		dep.add(activeEffect);
-		activeEffect?.deps.push(dep);
-	}
+	if (dep.has(activeEffect)) return;
+	
+	dep.add(activeEffect);
+	activeEffect?.deps.push(dep);
+}
+
+function isTracking() {
+	return shouldTrack && activeEffect !== undefined;
 }
 
 // 触发依赖
@@ -67,8 +85,6 @@ export function trigger(target, key) {
 		}
 	}
 }
-
-let activeEffect: any;
 
 export function effect(fn: any, options: any = {}) {
 	// fn

@@ -76,11 +76,13 @@ describe("effect", () => {
 		expect(dummy).toBe(20);
 		stop(runner);
 
-		foo.age = 30;
+		// foo.age = 30;
+		// expect(dummy).toBe(20);
+		foo.age++;
 		expect(dummy).toBe(20);
 
 		runner();
-		expect(dummy).toBe(30);
+		expect(dummy).toBe(21);
 	});
 
   it("onStop", () => {
