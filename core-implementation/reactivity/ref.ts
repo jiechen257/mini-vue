@@ -1,27 +1,45 @@
+import { hasChanged, isObject } from "../shared";
 import { isTracking, trackEffects, triggerEffect } from "./effect";
+import { reactive } from "./reactive";
 
-class RefImpl {
+export class RefImpl {
 	private _value: any;
 	public dep;
+	private _rawValue: any;
 	constructor(value) {
-		this._value = value;
+		this._rawValue = value;
+		this._value = convert(value);
 		this.dep = new Set();
 	}
 
 	get value() {
-		if (isTracking()) {
-			trackEffects(this.dep);
-		}
+		trackRefValue(this);
 		return this._value;
 	}
 
 	set value(newValue) {
-    // 如果 ref.value 设置的 newValue 同旧值一样，则不做处理
-    if (Object.is(newValue, this._value)) return;
-
-		this._value = newValue;
-		triggerEffect(this.dep);
+		// 如果 ref.value 设置的 newValue 同旧值一样，则不做处理
+		if (hasChanged(newValue, this._rawValue)) {
+			this._value = convert(newValue);
+			this._rawValue = newValue;
+			triggerRefValue(this)
+		}
 	}
+}
+
+function convert(value) {
+	return isObject(value) ? reactive(value) : value;
+}
+
+function trackRefValue(ref) {
+	if (isTracking()) {
+		trackEffects(ref.dep);
+	}
+}
+
+
+export function triggerRefValue(ref) {
+  triggerEffect(ref.dep);
 }
 
 export function ref(raw) {
